@@ -31,7 +31,7 @@ class FSM {
      * @param state
      */
     changeState(state) {
-        this.count ++;
+        this.count++;
         this.storageOfStates[this.count] = this.state;
         this.flagForChangeState = false;
         if (!this.config.states[state]) {
@@ -39,7 +39,7 @@ class FSM {
         } else {
             this.prevState = this.state;
             this.state = state;
-            this.count ++;
+            this.count++;
             this.storageOfStates[this.count] = this.state;
         }
     }
@@ -49,7 +49,7 @@ class FSM {
      * @param event
      */
     trigger(event) {
-        this.count ++;
+        this.count++;
         this.storageOfStates[this.count] = this.state;
         this.flagForTrigger = false;
         var newState = this.config.states[this.state].transitions[event];
@@ -58,7 +58,7 @@ class FSM {
         }
         this.prevState = this.state;
         this.state = newState;
-        this.count ++;
+        this.count++;
         this.storageOfStates[this.count] = this.state;
     }
 
@@ -83,14 +83,12 @@ class FSM {
         if (!event) {
             return states;
         }
-        for (var i = 0; i < states.length; i ++) {
+        for (var i = 0; i < states.length; i++) {
             var transitions = this.config.states[states[i]].transitions;
             if (transitions[event]) {
                 statesOfEvent.push(states[i]);
             }
         }
-        this.count ++;
-        this.storageOfStates[this.count] = this.state;
         return statesOfEvent;
     }
 
@@ -103,10 +101,17 @@ class FSM {
         this.flagForChangeState = true;
         this.flagForTrigger = true;
 
-        if (this.state == this.config.initial) {
-            return false;
-        } else if ((this.count --) && (this.state = this.storageOfStates[this.count])) {
+        if (this.storageOfStates.length > 0) {
+            this.count--;
+            if (this.count == 0) {
+                this.state = this.config.initial;
+                return false;
+            } else {
+                this.state = this.storageOfStates[this.count];
+            }
             return true;
+        } else {
+            return false;
         }
     }
 
@@ -116,7 +121,7 @@ class FSM {
      * @returns {Boolean}
      */
     redo() {
-        this.count ++;
+        this.count++;
         if ((this.state = this.storageOfStates[this.count])) {
             return true;
         } else if (this.flagForChangeState) {
@@ -132,7 +137,7 @@ class FSM {
      * Clears transition history
      */
     clearHistory() {
-        this.state = this.config.initial;
+        this.storageOfStates = [];
     }
 }
 
