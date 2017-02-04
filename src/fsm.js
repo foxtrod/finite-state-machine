@@ -44,10 +44,6 @@ class FSM {
         }
     }
 
-
-    //console.log(config.states.busy.transitions.get_hungry);
-    //console.log(config["states"]["busy"]["transitions"]["get_hungry"]);
-
     /**
      * Changes state according to event transition rules.
      * @param event
@@ -121,15 +117,14 @@ class FSM {
      */
     redo() {
         this.count ++;
-        this.state = this.storageOfStates[this.count];
-        if (this.flagForChangeState) {
+        if ((this.state = this.storageOfStates[this.count])) {
+            return true;
+        } else if (this.flagForChangeState) {
             return false;
         } else if (this.flagForTrigger) {
             return false;
-        } else if (this.state == this.config.initial) {
+        } else if (this.config.initial) {
             return false;
-        } else if ((this.count ++) && (this.state = this.storageOfStates[this.count])) {
-            return true;
         }
     }
 
@@ -137,9 +132,7 @@ class FSM {
      * Clears transition history
      */
     clearHistory() {
-        this.storageOfStates = [];
-        //this.config.initial = 'normal';
-
+        this.state = this.config.initial;
     }
 }
 
