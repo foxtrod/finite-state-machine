@@ -9,8 +9,6 @@ class FSM {
         } else {
             this.state = config.initial;
             this.config = config;
-            this.flagForChangeState = null;
-            this.flagForTrigger = null;
             this.currentStateIndex = 0;
             this.storageOfStates = [this.state];
         }
@@ -32,7 +30,6 @@ class FSM {
         if (!this.config.states[state]) {
             throw new Error("such state isn't exist");
         } else {
-            this.flagForChangeState = true;
             this.currentStateIndex++;
             this.state = state;
             this.storageOfStates = this.storageOfStates.slice(0, this.currentStateIndex);
@@ -49,11 +46,7 @@ class FSM {
         if (!newState) {
             throw new Error("such event isn't exist");
         } else {
-            this.currentStateIndex++;
-            this.flagForTrigger = true;
-            this.state = newState;
-            this.storageOfStates = this.storageOfStates.slice(0, this.currentStateIndex);
-            this.storageOfStates.push(this.state);
+            this.changeState(newState);
         }
     }
 
@@ -93,9 +86,6 @@ class FSM {
      * @returns {Boolean}
      */
     undo() {
-        this.flagForChangeState = false;
-        this.flagForTrigger = false;
-
         if (this.state == this.config.initial) {
             return false;
         } else if (this.storageOfStates.length > 0) {
@@ -113,9 +103,7 @@ class FSM {
      * @returns {Boolean}
      */
     redo() {
-        if (this.flagForChangeState || this.flagForTrigger) {
-            return false;
-        } else if (this.storageOfStates.length == 0) {
+        if (this.storageOfStates.length == 0) {
             return false;
         } else if (this.currentStateIndex < (this.storageOfStates.length - 1)) {
             this.currentStateIndex++;
