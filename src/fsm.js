@@ -9,12 +9,10 @@ class FSM {
         } else {
             this.state = config.initial;
             this.config = config;
-            //this.prevState = null;
-            //this.nextState = null;
             this.flagForChangeState = null;
             this.flagForTrigger = null;
-            this.count = 0;
-            this.storageOfStates = [];
+            this.currentStateIndex = 0;
+            this.storageOfStates = [this.state];
         }
     }
 
@@ -31,16 +29,14 @@ class FSM {
      * @param state
      */
     changeState(state) {
-        this.count++;
-        this.storageOfStates[this.count] = this.state;
-        this.flagForChangeState = false;
         if (!this.config.states[state]) {
             throw new Error("such state isn't exist");
         } else {
-            this.prevState = this.state;
+            this.flagForChangeState = true;
+            this.currentStateIndex++;
             this.state = state;
-            this.count++;
-            this.storageOfStates[this.count] = this.state;
+            this.storageOfStates = this.storageOfStates.slice(0, this.currentStateIndex);
+            this.storageOfStates.push(this.state);
         }
     }
 
@@ -49,17 +45,16 @@ class FSM {
      * @param event
      */
     trigger(event) {
-        this.count++;
-        this.storageOfStates[this.count] = this.state;
-        this.flagForTrigger = false;
         var newState = this.config.states[this.state].transitions[event];
         if (!newState) {
             throw new Error("such event isn't exist");
+        } else {
+            this.currentStateIndex++;
+            this.flagForTrigger = true;
+            this.state = newState;
+            this.storageOfStates = this.storageOfStates.slice(0, this.currentStateIndex);
+            this.storageOfStates.push(this.state);
         }
-        this.prevState = this.state;
-        this.state = newState;
-        this.count++;
-        this.storageOfStates[this.count] = this.state;
     }
 
     /**
@@ -98,17 +93,14 @@ class FSM {
      * @returns {Boolean}
      */
     undo() {
-        this.flagForChangeState = true;
-        this.flagForTrigger = true;
+        this.flagForChangeState = false;
+        this.flagForTrigger = false;
 
-        if (this.storageOfStates.length > 0) {
-            this.count--;
-            if (this.count == 0) {
-                this.state = this.config.initial;
-                return false;
-            } else {
-                this.state = this.storageOfStates[this.count];
-            }
+        if (this.state == this.config.initial) {
+            return false;
+        } else if (this.storageOfStates.length > 0) {
+            this.currentStateIndex --;
+            this.state = this.storageOfStates[this.currentStateIndex];
             return true;
         } else {
             return false;
@@ -121,14 +113,15 @@ class FSM {
      * @returns {Boolean}
      */
     redo() {
-        this.count++;
-        if ((this.state = this.storageOfStates[this.count])) {
+        if (this.flagForChangeState || this.flagForTrigger) {
+            return false;
+        } else if (this.storageOfStates.length == 0) {
+            return false;
+        } else if (this.currentStateIndex < (this.storageOfStates.length - 1)) {
+            this.currentStateIndex++;
+            this.state = this.storageOfStates[this.currentStateIndex];
             return true;
-        } else if (this.flagForChangeState) {
-            return false;
-        } else if (this.flagForTrigger) {
-            return false;
-        } else if (this.config.initial) {
+        } else {
             return false;
         }
     }
